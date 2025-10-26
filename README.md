@@ -33,5 +33,9 @@ It allows the admin to wipe **contacts, call logs, SMS, internal & external stor
 
 ---
 
-## 🧩 Architecture Overview
+## ⚠️ Important Notes
 
+Once a DevicePolicyManager wipe is triggered, the action cannot be undone.
+Some system or protected directories (e.g., /system, /vendor) cannot be deleted for safety reasons.
+On Android 11+ (R and above), ensure MANAGE_EXTERNAL_STORAGE permission is granted manually through the settings popup.
+Wiping SMS requires the app to be set as default SMS handler on newer Android versions.
