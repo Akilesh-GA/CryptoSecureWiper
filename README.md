@@ -25,6 +25,15 @@
 
 ---
 
+### 📷 Prototype
+
+<div align="center" style="display: flex; justify-content: center; align-items: flex-start; gap: 10px; flex-wrap: nowrap;">
+  <img src="images/home.jpeg" alt="Home" style="width: 18%; height: auto;">
+  <img src="images/login.jpeg" alt="Login" style="width: 18%; height: auto;">
+  <img src="images/dashboard.jpeg" alt="Dashboard" style="width: 18%; height: auto;">
+  <img src="images/wipe.jpeg" alt="Wipe" style="width: 18%; height: auto;">
+</div>
+
 ## 🧠 Tech Stack
 
 * **Frontend:** Flutter (Dart) for a responsive, material dashboard.
@@ -75,15 +84,6 @@
     ```
 
 ---
-
-### 📷 Prototype
-
-<div align="center" style="display: flex; justify-content: center; align-items: flex-start; gap: 10px; flex-wrap: nowrap;">
-  <img src="images/home.png" alt="Home" style="width: 18%; height: auto;">
-  <img src="images/login.png" alt="Login" style="width: 18%; height: auto;">
-  <img src="images/dashboard.png" alt="Dashboard" style="width: 18%; height: auto;">
-  <img src="images/wipe.png" alt="Wipe" style="width: 18%; height: auto;">
-</div>
 
 ## 📋 Permissions Required
 
