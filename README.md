@@ -76,17 +76,14 @@
 
 ---
 
-## 📸 Prototype 
+### 📷 Prototype
 
-https://drive.google.com/file/d/1g7P5HMz7LGP3oWrLwzvDExP2FBmhD3jA/view?usp=sharing
-
-https://drive.google.com/file/d/1mOS-h240AWIj31uhnwwnhmjzsISXxJmK/view?usp=sharing
-
-https://drive.google.com/file/d/1tJNtXq0I1HlIVysYojc-2aJ-OxgqC2Ej/view?usp=sharing
-
-https://drive.google.com/file/d/1sqDT-nLXz_jrTw8vt0v2NAFA-Sy2uTHx/view?usp=sharing
-
-https://drive.google.com/file/d/1qY2EbaERiX2kdvJSsm5LLJar-QhuphdI/view?usp=sharing
+<div align="center" style="display: flex; justify-content: center; align-items: flex-start; gap: 10px; flex-wrap: nowrap;">
+  <img src="images/home.png" alt="Home" style="width: 18%; height: auto;">
+  <img src="images/login.png" alt="Login" style="width: 18%; height: auto;">
+  <img src="images/dashboard.png" alt="Dashboard" style="width: 18%; height: auto;">
+  <img src="images/wipe.png" alt="Wipe" style="width: 18%; height: auto;">
+</div>
 
 ## 📋 Permissions Required
 
