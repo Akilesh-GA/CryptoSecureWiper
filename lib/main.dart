@@ -18,3 +18,4 @@ class SecureWipeApp extends StatelessWidget {
     );
   }
 }
+

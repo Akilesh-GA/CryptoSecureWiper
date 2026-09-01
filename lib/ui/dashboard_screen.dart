@@ -287,10 +287,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16.0),
               child: Text(
-                "Secure Wipe Dashboard",
+                "Device Storage Console",
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -327,7 +327,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 30),
                     if (flashStats != null)
                       StorageSection(
-                        label: "Flash Memory (Total Device Storage)",
+                        label: "Flash Memory",
                         total: flashStats!['total']!,
                         used: flashStats!['used']!,
                         free: flashStats!['free']!,
