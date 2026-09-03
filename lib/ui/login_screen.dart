@@ -1,6 +1,9 @@
+import 'package:cryptocore/ui/pre_login_consent_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
-import 'home_screen.dart';
+import 'signup_screen.dart';
+import 'package:cryptocore/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,14 +14,16 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   late AnimationController _controller;
   final Random random = Random();
   final int numberOfParticles = 40;
   final List<Offset> particles = [];
   bool _isPasswordObscured = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -36,288 +41,95 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _controller.dispose();
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     FocusScope.of(context).unfocus();
 
-    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
-      _showToast(
-        message: "Please fill in all fields",
-        icon: Icons.info_outline_rounded,
-        iconColor: Colors.white,
-      );
+    if (email.isEmpty || password.isEmpty) {
+      _showSystemToast("Please fill in all fields");
       return;
     }
 
-    if (username == 'kabhilan' && password == 'kabhilan@321') {
-      _showLoginWarningConfirmation();
-    } else {
-      _showToast(
-        message: "Invalid username or password",
-        icon: Icons.error_outline_rounded,
-        iconColor: Colors.redAccent,
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.signInWithEmail(email: email, password: password);
+      if (!mounted) return;
+
+      // Directly navigate to PreLoginConsentScreen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const PreLoginConsentScreen(),
+        ),
       );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = "Authentication failed";
+      if (e.code == 'user-not-found') {
+        errorMessage = "No user found with this email.";
+      } else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        errorMessage = "Invalid email or password.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "Invalid email address format.";
+      } else if (e.code == 'user-disabled') {
+        errorMessage = "This user account has been disabled.";
+      }
+
+      _showSystemToast(errorMessage);
+    } catch (_) {
+      _showSystemToast("An unexpected error occurred");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showLoginWarningConfirmation() {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: const Color(0xFF121212),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Colors.redAccent, width: 1),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.redAccent,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    "WARNING",
-                    style: TextStyle(
-                      color: Colors.redAccent,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Divider(color: Colors.white12, height: 1),
-              const SizedBox(height: 16),
-
-              // Content Body
-              Text(
-                "Crypto Secure Wiper initiates an unrecoverable DPM command permanently sanitizes all system sectors and user storage. Data recovery is cryptographically impossible.",
-                style: TextStyle(
-                  color: Colors.grey.shade300,
-                  fontSize: 13,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      if (Navigator.canPop(dialogContext)) {
-                        Navigator.pop(dialogContext);
-                      }
-                    },
-                    child: Text(
-                      "Cancel",
-                      style: TextStyle(
-                        color: Colors.grey.shade400,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    height: 36,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const HomeScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        "Proceed",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Displays a compact floating Toast for clear and immediate acknowledgment.
-  void _showToast({
-    required String message,
-    required IconData icon,
-    Color iconColor = Colors.white,
-  }) {
+  /// Displays a compact, floating system toast with Flutter Logo and high contrast styling
+  void _showSystemToast(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        elevation: 8,
+        elevation: 6,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF1E293B),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        backgroundColor: Colors.black,
+        margin: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Colors.white24, width: 1),
+          side: const BorderSide(color: Colors.white24, width: 0.8),
         ),
-        margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).size.height * 0.08,
-          left: 48,
-          right: 48,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         content: Row(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: iconColor,
-              size: 18,
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const FlutterLogo(size: 16),
             ),
-            const SizedBox(width: 10),
-            Flexible(
+            const SizedBox(width: 12),
+            Expanded(
               child: Text(
                 message,
-                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showCleanHelpModal(
-      String title,
-      IconData icon,
-      List<Widget> contentWidgets,
-      ) {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: const Color(0xFF121212),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Colors.white24, width: 1),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white10,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(icon, color: Colors.grey.shade300, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Divider(color: Colors.white12, height: 1),
-              const SizedBox(height: 16),
-
-              // Body Content
-              ...contentWidgets,
-
-              const SizedBox(height: 24),
-
-              // Dismiss Button
-              Align(
-                alignment: Alignment.centerRight,
-                child: SizedBox(
-                  height: 36,
-                  width: 90,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade900,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: const BorderSide(color: Colors.white24),
-                      ),
-                    ),
-                    onPressed: () {
-                      if (Navigator.canPop(dialogContext)) {
-                        Navigator.pop(dialogContext);
-                      }
-                    },
-                    child: const Text(
-                      "Got It",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -331,7 +143,6 @@ class _LoginScreenState extends State<LoginScreen>
       backgroundColor: const Color(0xFF0F172A),
       body: Stack(
         children: [
-          // Background Animated Canvas
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
@@ -341,8 +152,6 @@ class _LoginScreenState extends State<LoginScreen>
               );
             },
           ),
-
-          // Main Layout
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
@@ -352,191 +161,26 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Top Navigation Header: "Login" Title (Left) + Help Icon (Right)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                            ),
+                      // Header: Title centered at top
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Login",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
                           ),
-                          Theme(
-                            data: Theme.of(context).copyWith(
-                              cardColor: const Color(0xFF121212),
-                            ),
-                            child: PopupMenuButton<String>(
-                              tooltip: '',
-                              icon: Icon(
-                                Icons.help_outline_rounded,
-                                color: Colors.grey.shade400,
-                                size: 22,
-                              ),
-                              offset: const Offset(0, 40),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: const BorderSide(color: Colors.white12),
-                              ),
-                              onSelected: (value) {
-                                if (!mounted) return;
-                                switch (value) {
-                                  case 'operations':
-                                    _showCleanHelpModal(
-                                      "Wipe Methods",
-                                      Icons.delete_forever_outlined,
-                                      [
-                                        Text(
-                                          "Active sanitization methods:",
-                                          style: TextStyle(
-                                            color: Colors.grey.shade400,
-                                            fontSize: 13,
-                                            height: 1.4,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        _buildBulletRow("ContentProvider Purge (Contacts, SMS, Call Logs)"),
-                                        _buildBulletRow("MediaStore Bulk Wipe (Images, Videos, Audio, Docs)"),
-                                        _buildBulletRow("Recursive Overwriting & DevicePolicyManager Reset"),
-                                      ],
-                                    );
-                                    break;
-                                  case 'working':
-                                    _showCleanHelpModal(
-                                      "How It Works",
-                                      Icons.settings_suggest_outlined,
-                                      [
-                                        Text(
-                                          "Execution sequence when a device wipe operation is triggered:",
-                                          style: TextStyle(
-                                            color: Colors.grey.shade400,
-                                            fontSize: 13,
-                                            height: 1.4,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        _buildBulletRow("Verifies DeviceAdminReceiver and storage access permissions."),
-                                        _buildBulletRow("UserDataWipeHelper runs ContentResolver queries and recursive overwriting."),
-                                        _buildBulletRow("DevicePolicyManager sends an OS-level trigger to format partitions."),
-                                      ],
-                                    );
-                                    break;
-                                  case 'support':
-                                    _showCleanHelpModal(
-                                      "Support Desk",
-                                      Icons.support_agent_outlined,
-                                      [
-                                        Text(
-                                          "Contact support center for access issues:",
-                                          style: TextStyle(
-                                            color: Colors.grey.shade400,
-                                            fontSize: 13,
-                                            height: 1.4,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Container(
-                                          width: double.infinity,
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black,
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: Colors.white12),
-                                          ),
-                                          child: const Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Email: cryptocore828@gmail.com",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                    break;
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'operations',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.delete_forever_outlined,
-                                        color: Colors.grey.shade400,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      const Text(
-                                        "Wipe Methods",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'working',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.settings_suggest_outlined,
-                                        color: Colors.grey.shade400,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      const Text(
-                                        "Working",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'support',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.support_agent_outlined,
-                                        color: Colors.grey.shade400,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      const Text(
-                                        "Support",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
 
                       // Input Fields
                       Column(
                         children: [
                           TextField(
-                            controller: _usernameController,
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
@@ -548,11 +192,11 @@ class _LoginScreenState extends State<LoginScreen>
                                 vertical: 16,
                               ),
                               prefixIcon: Icon(
-                                Icons.person_outline,
+                                Icons.email_outlined,
                                 color: Colors.grey.shade400,
                                 size: 20,
                               ),
-                              labelText: "Username",
+                              labelText: "Email",
                               labelStyle: TextStyle(
                                 color: Colors.white.withOpacity(0.7),
                                 fontSize: 13,
@@ -630,100 +274,137 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                          const SizedBox(height: 16),
 
-                      // Action Button
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 30),
-                        child: SizedBox(
-                          width: 160,
-                          height: 40,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.blueAccent.shade400,
-                                  Colors.cyanAccent.shade400,
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.cyanAccent.withOpacity(0.35),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 4),
+                          // Navigation to Sign Up
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SignUpScreen(),
                                 ),
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24),
+                              );
+                            },
+                            child: RichText(
+                              text: TextSpan(
+                                text: "Don't have an account? ",
+                                style: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 16,
                                 ),
-                              ),
-                              onPressed: _login,
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.login_rounded,
-                                    color: Color(0xFF0F172A),
-                                    size: 18,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    "Login",
+                                children: const [
+                                  TextSpan(
+                                    text: "Sign Up",
                                     style: TextStyle(
-                                      fontSize: 15,
+                                      color: Colors.cyanAccent,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF0F172A),
-                                      letterSpacing: 1.1,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
+                        ],
+                      ),
+
+                      // Action Button & Support Email
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              width: 160,
+                              height: 40,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.blueAccent.shade400,
+                                      Colors.cyanAccent.shade400,
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.cyanAccent.withOpacity(0.35),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                  ),
+                                  onPressed: _isLoading ? null : _login,
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  )
+                                      : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.login_rounded,
+                                        color: Color(0xFF0F172A),
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        "Login",
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF0F172A),
+                                          letterSpacing: 1.1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Support Email Displayed Below Login Button
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.support_agent_outlined,
+                                  color: Colors.grey.shade500,
+                                  size: 15,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Support: cryptocore828@gmail.com",
+                                  style: TextStyle(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static Widget _buildBulletRow(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "• ",
-            style: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                height: 1.3,
               ),
             ),
           ),

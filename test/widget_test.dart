@@ -1,11 +1,11 @@
+import 'package:cryptocore/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:securewipe/main.dart';
 
 void main() {
   testWidgets('App launches and navigates correctly', (WidgetTester tester) async {
     // Build the app
-    await tester.pumpWidget(const SecureWipeApp());
+    await tester.pumpWidget(SecureWipeApp());
 
     // Verify WelcomePage is displayed
     expect(find.text('Secure Wipe'), findsOneWidget);

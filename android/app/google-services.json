@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "247866443316",
+    "project_id": "pitch-punchbiz",
+    "storage_bucket": "pitch-punchbiz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:247866443316:android:64cb5e9199589cd2e32c61",
+        "android_client_info": {
+          "package_name": "com.example.securewipe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0Bchk_gSlaozbFDY2qYEPsUGaC-J0w0M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
